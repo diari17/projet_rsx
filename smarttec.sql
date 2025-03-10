@@ -31,3 +31,11 @@ CREATE TABLE IF NOT EXISTS document (
     typedoc VARCHAR(50) NOT NULL,
     descriptiondoc TEXT
 );
+
+ALTER TABLE document
+ADD COLUMN fichier_nom VARCHAR(255),
+ADD COLUMN fichier_chemin VARCHAR(255),
+ADD COLUMN fichier_taille INT,
+ADD COLUMN fichier_type VARCHAR(100);
+
+ALTER TABLE document ADD COLUMN fichier VARCHAR(255);

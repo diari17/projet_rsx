@@ -4,9 +4,25 @@ include 'config.php';
 // Suppression d'un document
 if (isset($_GET['delete_id'])) {
     $id = $_GET['delete_id'];
+
+    // Récupérer le chemin du fichier avant de supprimer le document
+    $sql = "SELECT fichier FROM document WHERE iddoc = :id";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(['id' => $id]);
+    $document = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($document && !empty($document['fichier'])) {
+        // Supprimer le fichier du serveur
+        if (file_exists($document['fichier'])) {
+            unlink($document['fichier']);
+        }
+    }
+
+    // Supprimer le document de la base de données
     $sql = "DELETE FROM document WHERE iddoc = :id";
     $stmt = $conn->prepare($sql);
     $stmt->execute(['id' => $id]);
+
     header('Location: documents.php');
     exit();
 }
@@ -144,6 +160,7 @@ $documents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <th><i class="bi bi-file-earmark me-1"></i>Nom</th>
                                 <th><i class="bi bi-filetype-doc me-1"></i>Type</th>
                                 <th><i class="bi bi-card-text me-1"></i>Description</th>
+                                <th><i class="bi bi-file-earmark-arrow-down me-1"></i>Fichier</th>
                                 <th><i class="bi bi-gear me-1"></i>Actions</th>
                             </tr>
                         </thead>
@@ -155,6 +172,18 @@ $documents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <td><?php echo $document['nom']; ?></td>
                                     <td><?php echo $document['typedoc']; ?></td>
                                     <td><?php echo $document['descriptiondoc']; ?></td>
+                                    <td>
+                                        <?php if (!empty($document['fichier'])): ?>
+                                            <a href="<?php echo $document['fichier']; ?>" class="btn btn-sm btn-primary" target="_blank">
+                                                <i class="bi bi-eye"></i> Visualiser
+                                            </a>
+                                            <a href="<?php echo $document['fichier']; ?>" class="btn btn-sm btn-success" download>
+                                                <i class="bi bi-download"></i> Télécharger
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-muted">Aucun fichier</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="action-buttons">
                                         <a href="modifier_document.php?id=<?php echo $document['iddoc']; ?>" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil-square"></i> Modifier
@@ -168,7 +197,7 @@ $documents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="5" class="text-center py-4">
+                                    <td colspan="6" class="text-center py-4">
                                         <div class="alert alert-info mb-0">
                                             <i class="bi bi-info-circle me-2"></i> Aucun document n'a été trouvé.
                                             <a href="ajouter_document.php" class="alert-link">Ajouter un nouveau document</a>
